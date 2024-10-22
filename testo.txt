@@ -1,0 +1,34 @@
+ya hare el cambio de ese fetch igual este es el back :
+import { NextResponse } from 'next/server';
+
+export async function POST(request: Request) {
+  const { message } = await request.json();
+
+  const prompt = `
+    Eres un asistente legal especializado en leyes chilenas. Responde solo a preguntas relacionadas con legislación, derechos y normativas chilenas.
+    Si una pregunta no está relacionada con estos temas, responde de manera cordial diciendo: 
+    "Este chatbot está especializado en temas legales de Chile. Por favor, formula una pregunta relacionada con leyes chilenas."
+  `;
+
+  const formattedMessages = [
+    { role: 'system', content: prompt },
+    ...message, // Mensajes anteriores del usuario
+  ];
+
+  const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,  // Asegúrate de tener tu API Key en .env
+    },
+    body: JSON.stringify({
+      model: 'gpt-3.5-turbo',  // O el modelo que estés usando
+      messages: formattedMessages,
+    }),
+  });
+
+  const data = await openaiResponse.json();
+  const botAnswer = data.choices[0].message.content;
+
+  return NextResponse.json({ answer: botAnswer });
+}
